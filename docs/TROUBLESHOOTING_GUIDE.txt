@@ -1,0 +1,305 @@
+===============================================================================
+CABLE EDIT DATA LOSS ISSUE - COMPLETE DIAGNOSTIC & FIX GUIDE
+===============================================================================
+
+PROBLEM SUMMARY:
+When editing a cable (CV103-C1001-CV103), the Source and Destination fields 
+appear EMPTY in the edit form. When you save, those empty values overwrite 
+the existing data ("Conveyor belt 3"), causing data loss.
+
+ROOT CAUSE:
+The edit form stores SHORT NAMES in dropdowns (like "CV103") but cables store 
+FULL DESCRIPTIONS (like "Conveyor belt 3"). When editing, the system must 
+convert descriptions back to short names. If this lookup FAILS, the dropdowns 
+stay empty, and saving writes empty values to the table.
+
+===============================================================================
+STEP 1: INSTALL DIAGNOSTIC MODULE
+===============================================================================
+
+1. Open your Excel file with Alt+F11 (VBA Editor)
+
+2. Insert → Module
+
+3. Copy the entire contents of "ModDiagnostics.bas" into the new module
+
+4. Save
+
+===============================================================================
+STEP 2: RUN DIAGNOSTICS
+===============================================================================
+
+1. Press Ctrl+G to open the Immediate Window
+
+2. Type this command (replace with your actual cable ID):
+   
+   DiagnoseEndpointLookup "CV103-C1001-CV103", "WET_PLANT"
+
+3. Press Enter
+
+4. READ THE OUTPUT CAREFULLY - it will tell you exactly what's wrong:
+   
+   Example Output:
+   ===============================================
+   ENDPOINT LOOKUP DIAGNOSTIC
+   ===============================================
+   Cable ID: CV103-C1001-CV103
+   Plant Type: WET_PLANT
+   
+   * Cable found at table row index: 1
+   
+   CABLE DATA FROM TABLE:
+     Source (stored): [Conveyor belt 3]
+     Destination (stored): [Conveyor belt 3]
+   
+   LOADING ENDPOINTS FOR WET_PLANT...
+   * Found 5 endpoints
+   
+   ALL ENDPOINTS IN TABLE:
+   Index | Short Name | Description
+   ------|------------|-------------
+     0   | CV101 | Conveyor belt 1
+     1   | CV102 | Conveyor belt 2
+     2   | WM101 | Wet mill motor 1
+     
+   SEARCHING FOR SOURCE ENDPOINT...
+     Looking for description: [Conveyor belt 3]
+     X NOT FOUND
+     This is why the Source dropdown appears empty!
+   
+   SEARCHING FOR DESTINATION ENDPOINT...
+     Looking for description: [Conveyor belt 3]
+     X NOT FOUND
+     This is why the Destination dropdown appears empty!
+   
+   DIAGNOSIS SUMMARY:
+   ===============================================
+   X Problem identified:
+     - Source endpoint description doesn't match any endpoint in table
+     - Destination endpoint description doesn't match any endpoint in table
+   
+   SOLUTION OPTIONS:
+   1. Add the missing endpoint(s) to the endpoints table
+   2. Update the cable record to use an existing endpoint
+   3. Fix any spelling/spacing differences in descriptions
+   ===============================================
+
+===============================================================================
+STEP 3: FIX THE UNDERLYING PROBLEM
+===============================================================================
+
+Based on the diagnostic output, choose ONE of these fixes:
+
+OPTION A: ADD THE MISSING ENDPOINT
+-----------------------------------
+If the endpoint should exist but doesn't:
+
+1. Go to the Dashboard sheet
+2. Click "Register New Endpoint" for the appropriate plant
+3. Add the missing endpoint:
+   - Short Name: CV103
+   - Description: Conveyor belt 3
+4. Save
+
+Then try editing the cable again.
+
+
+OPTION B: UPDATE CABLE TO USE EXISTING ENDPOINT
+------------------------------------------------
+If the cable is referencing the wrong endpoint:
+
+1. Manually edit the cable record in the worksheet
+2. Change Source/Destination to match an existing endpoint description EXACTLY
+3. Or delete and re-create the cable with correct endpoints
+
+
+OPTION C: FIX SPELLING/SPACING DIFFERENCES
+-------------------------------------------
+If endpoints exist but descriptions don't match exactly:
+
+1. Compare the cable's stored description with endpoint descriptions
+2. Fix any differences:
+   - Extra spaces
+   - Different capitalization
+   - Typos
+3. Update either the cable record or endpoint to match
+
+===============================================================================
+STEP 4: INSTALL THE IMPROVED EDIT FORM (PREVENTS FUTURE DATA LOSS)
+===============================================================================
+
+The improved version will PREVENT data loss by detecting when lookup fails
+and REFUSING to open the edit form (instead of silently erasing data).
+
+1. Open VBA Editor (Alt+F11)
+
+2. In Project Explorer, find "UserForms" → "frm_RegisterCable"
+
+3. Double-click to open the code window
+
+4. Find the ShowForUpdate method (around line 1185)
+
+5. DELETE the entire existing ShowForUpdate method (from "Public Sub" to "End Sub")
+
+6. Open "ShowForUpdate_Improved.bas" from the outputs folder
+
+7. COPY the entire improved method
+
+8. PASTE it into frm_RegisterCable where you deleted the old method
+
+9. Save (Ctrl+S)
+
+WHAT THE IMPROVED VERSION DOES:
+- Performs the same endpoint lookup
+- If lookup FAILS, shows detailed error message
+- REFUSES to open the edit form (preventing accidental data loss)
+- Provides diagnostic instructions in the error message
+- Logs detailed debug info to Immediate Window
+
+===============================================================================
+STEP 5: TEST THE FIX
+===============================================================================
+
+1. Try editing the cable again
+
+2. If endpoints are still missing, you'll see a detailed error:
+   
+   "CRITICAL ERROR: Cannot edit cable - endpoint lookup failed!"
+   
+   With instructions on how to fix it.
+
+3. Follow the instructions in the error message
+
+4. Once endpoints are correct, editing will work properly
+
+===============================================================================
+VERIFICATION CHECKLIST
+===============================================================================
+
+After implementing the fix, verify:
+
+[ ] Diagnostic module is installed (ModDiagnostics)
+[ ] Ran DiagnoseEndpointLookup and understood the output  
+[ ] Fixed the underlying endpoint issue (added missing endpoints)
+[ ] Installed the improved ShowForUpdate method
+[ ] Tested editing - form now shows correct Source/Destination values
+[ ] Saved changes successfully without data loss
+[ ] Verified data is preserved in the worksheet
+
+===============================================================================
+PREVENTIVE MEASURES FOR FUTURE
+===============================================================================
+
+To prevent this issue from happening again:
+
+1. NEVER manually edit cable Source/Destination in the worksheet
+   - Always use the forms
+   - Forms ensure valid endpoint references
+
+2. NEVER delete endpoints that are referenced by cables
+   - Check cables first
+   - Update cables to use different endpoints before deleting
+
+3. When adding new cables, ensure endpoints exist FIRST
+   - Use "Create Endpoint" button from cable form
+   - Verify endpoint appears in dropdown before selecting it
+
+4. Regularly backup your Excel file
+   - Keep multiple versions
+   - Test major changes on a copy first
+
+===============================================================================
+UNDERSTANDING THE SYSTEM ARCHITECTURE
+===============================================================================
+
+HOW ENDPOINTS AND CABLES ARE LINKED:
+
+Endpoints Table (tbl_WetPlantEndpoints):
+┌─────────────┬─────────────────────┐
+│ Short Name  │ Description         │
+├─────────────┼─────────────────────┤
+│ CV101       │ Conveyor belt 1     │
+│ CV102       │ Conveyor belt 2     │
+│ CV103       │ Conveyor belt 3     │ ← Must exist!
+└─────────────┴─────────────────────┘
+
+Cable Registration Form Dropdown:
+┌─────────────┐
+│ CV101       │ ← Shows SHORT NAMES
+│ CV102       │
+│ CV103       │
+└─────────────┘
+
+Cables Table (tbl_WetPlantCables):
+┌─────────────────────┬─────────────────────┬─────────────────────┐
+│ Cable ID            │ Source              │ Destination         │
+├─────────────────────┼─────────────────────┼─────────────────────┤
+│ CV103-C1001-CV103   │ Conveyor belt 3     │ Conveyor belt 3     │
+└─────────────────────┴─────────────────────┴─────────────────────┘
+                          ↑                       ↑
+                          Stores FULL DESCRIPTIONS
+
+When Editing:
+1. Load cable: "Source = Conveyor belt 3"
+2. Look up short name: Search endpoints for "Conveyor belt 3"
+3. If found: Get "CV103"
+4. Set dropdown: cmb_Source.Value = "CV103"
+5. If NOT found: cmb_Source.Value = "" ← DATA LOSS RISK!
+
+The improved version STOPS at step 5 and refuses to open the form.
+
+===============================================================================
+ADDITIONAL DIAGNOSTIC COMMANDS
+===============================================================================
+
+List all endpoints for a plant:
+   ListAllEndpoints "WET_PLANT"
+   ListAllEndpoints "ORE_SORTER"
+   ListAllEndpoints "RETREATMENT"
+
+Diagnose specific cable:
+   DiagnoseEndpointLookup "<CableID>", "<PlantType>"
+   
+Examples:
+   DiagnoseEndpointLookup "CV103-C1001-CV103", "WET_PLANT"
+   DiagnoseEndpointLookup "OS201-C2001-OS202", "ORE_SORTER"
+
+===============================================================================
+COMMON ERROR PATTERNS AND SOLUTIONS
+===============================================================================
+
+ERROR: "Conveyor belt3" vs "Conveyor belt 3"
+CAUSE: Missing space
+FIX: Update cable or endpoint to match exactly
+
+ERROR: "Conveyor Belt 3" vs "Conveyor belt 3"  
+CAUSE: Different capitalization
+FIX: Database uses case-insensitive comparison, but verify exact match
+
+ERROR: "Conveyor belt 3 " (trailing space)
+CAUSE: Extra whitespace
+FIX: Trim whitespace from cable or endpoint description
+
+ERROR: Description doesn't exist in endpoints table
+CAUSE: Endpoint was deleted or never created
+FIX: Add the endpoint to the endpoints table
+
+===============================================================================
+SUPPORT AND TROUBLESHOOTING
+===============================================================================
+
+If you continue to have issues:
+
+1. Check Immediate Window (Ctrl+G) for debug output
+2. Run DiagnoseEndpointLookup for the specific cable
+3. Verify endpoints table has all required entries
+4. Ensure endpoint descriptions match EXACTLY (spelling, spacing, case)
+5. Check that GetShortNameFromDescription function exists in frm_RegisterCable
+
+For complex issues:
+- Export the endpoints table to CSV
+- Export the cables table to CSV
+- Compare the descriptions manually
+- Fix any mismatches
+
+===============================================================================

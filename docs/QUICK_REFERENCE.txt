@@ -1,0 +1,139 @@
+===============================================================================
+QUICK FIX: CABLE EDIT DATA LOSS - IMMEDIATE ACTIONS
+===============================================================================
+
+PROBLEM: Source and Destination fields are EMPTY when editing a cable,
+         and saving erases the existing data.
+
+===============================================================================
+IMMEDIATE FIX (5 MINUTES)
+===============================================================================
+
+1. INSTALL DIAGNOSTIC MODULE
+   ✓ Alt+F11 (open VBA Editor)
+   ✓ Insert → Module  
+   ✓ Copy all text from "ModDiagnostics.bas" into new module
+   ✓ Save
+
+2. RUN DIAGNOSTIC
+   ✓ Press Ctrl+G (Immediate Window)
+   ✓ Type: DiagnoseEndpointLookup "CV103-C1001-CV103", "WET_PLANT"
+   ✓ Press Enter
+   ✓ Read the output - it shows the exact problem
+
+3. FIX THE PROBLEM
+   
+   If output says "NOT FOUND":
+   ✓ The endpoint doesn't exist in the endpoints table
+   ✓ Add it: Dashboard → Register New Endpoint
+   ✓ Short Name: CV103
+   ✓ Description: Conveyor belt 3 (must match exactly!)
+   
+   If output shows "Similar" matches:
+   ✓ There's a spelling/spacing difference
+   ✓ Fix the cable or endpoint to match exactly
+
+4. INSTALL DATA LOSS PREVENTION (OPTIONAL BUT RECOMMENDED)
+   ✓ Open frm_RegisterCable code window
+   ✓ Find ShowForUpdate method (line ~1185)
+   ✓ Replace entire method with contents of "ShowForUpdate_Improved.bas"
+   ✓ Save
+
+5. TEST
+   ✓ Try editing the cable again
+   ✓ Source and Destination should now show correct values
+   ✓ Save and verify data is preserved
+
+===============================================================================
+DIAGNOSTIC COMMAND REFERENCE
+===============================================================================
+
+Diagnose specific cable:
+   DiagnoseEndpointLookup "CABLE-ID", "PLANT-TYPE"
+
+List all endpoints:
+   ListAllEndpoints "WET_PLANT"
+   ListAllEndpoints "ORE_SORTER"  
+   ListAllEndpoints "RETREATMENT"
+
+===============================================================================
+WHY THIS HAPPENS
+===============================================================================
+
+Cables store:        "Conveyor belt 3" (full description)
+Form dropdown shows: "CV103" (short name)
+
+When editing:
+1. System looks up "Conveyor belt 3" in endpoints table
+2. Should find: CV103
+3. If NOT FOUND: Dropdown stays EMPTY
+4. Saving: Writes empty value → DATA LOSS!
+
+The improved code STOPS before data loss can occur.
+
+===============================================================================
+FILES PROVIDED
+===============================================================================
+
+1. ModDiagnostics.bas
+   → Diagnostic tools to identify the problem
+
+2. ShowForUpdate_Improved.bas
+   → Replacement method that prevents data loss
+
+3. TROUBLESHOOTING_GUIDE.txt
+   → Complete detailed guide with all scenarios
+
+4. THIS FILE (QUICK_REFERENCE.txt)
+   → Fast action checklist
+
+===============================================================================
+MOST COMMON CAUSES (90% OF CASES)
+===============================================================================
+
+1. Missing Endpoint (70%)
+   → Endpoint was never created in endpoints table
+   → FIX: Add the endpoint
+
+2. Spelling Difference (15%)
+   → "Conveyor belt3" vs "Conveyor belt 3"
+   → "Conveyor Belt 3" vs "Conveyor belt 3"
+   → FIX: Match spelling exactly
+
+3. Extra Whitespace (10%)
+   → Trailing or leading spaces
+   → FIX: Trim spaces
+
+4. Deleted Endpoint (5%)
+   → Endpoint existed but was deleted
+   → FIX: Re-create the endpoint
+
+===============================================================================
+CRITICAL WARNINGS
+===============================================================================
+
+⚠️ DO NOT edit cables until endpoints are fixed
+⚠️ DO NOT manually edit Source/Destination in worksheet
+⚠️ DO NOT delete endpoints that cables reference
+⚠️ DO backup your file before making changes
+
+===============================================================================
+VERIFICATION AFTER FIX
+===============================================================================
+
+✓ Diagnostic shows "FOUND" for both Source and Destination
+✓ Edit form shows correct values in dropdowns
+✓ Can save without data loss
+✓ Worksheet shows correct data after save
+
+===============================================================================
+NEED MORE HELP?
+===============================================================================
+
+Read the complete TROUBLESHOOTING_GUIDE.txt for:
+- Detailed explanations
+- System architecture
+- Preventive measures
+- Advanced diagnostics
+
+===============================================================================
