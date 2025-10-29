@@ -450,7 +450,7 @@ Examples:
 3. **Regex Validation:** Ensures consistent data format across all records
 4. **Disabled Fields During Edit:** Prevents corruption of primary key (Cable ID)
 5. **Floating Action Buttons:** Improves UX without cluttering worksheet
-
+6. **Lock Source/Destination During Edits:** See `docs/Disable_Source_Destination_Guidance.md`
 ### Module Responsibilities
 
 | Module | Responsibility |
