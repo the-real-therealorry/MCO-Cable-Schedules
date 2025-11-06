@@ -504,27 +504,33 @@ Project Root/
 
 ---
 
-## Questions Before Implementation
+## Configuration Decisions ✅
 
-1. **Version Numbering**: How should we version the spreadsheets? (e.g., 1.0, 1.1, 2.0)
+1. **Version Numbering**: Semantic versioning (e.g., 2024.12.1, 2025.01.1)
+   - Format: YYYY.MM.revision
+   - Easy to see when version was created
+   - Clear progression
 
-2. **Default Export Location**: Should exports go to:
-   - Same folder as workbook?
-   - Documents folder?
-   - User chooses each time?
+2. **Default Export Location**: User chooses each time
+   - File browser dialog on export
+   - No assumptions about location
+   - Maximum flexibility
 
-3. **Auto-Create Endpoints**: When auto-creating missing endpoints, should they:
-   - Go into the same plant's endpoint table?
-   - Get flagged somehow for review?
+3. **Auto-Create Endpoints**: Add note "(Imported - Review)" to description
+   - Example: "MCC 2 (Imported - Review)"
+   - Clearly marks which endpoints need verification
+   - Easy to search and fix later
 
-4. **Backup Retention**: How long to keep backup files?
-   - Keep all backups?
-   - Delete after X days?
-   - Keep last N backups?
+4. **Backup Retention**: Keep last 10 backups, auto-delete older
+   - Balances safety with disk space
+   - Always have recent restore points
+   - Automatic cleanup prevents clutter
+   - Implementation: On backup creation, check count and delete oldest if > 10
 
-5. **Large Datasets**: If you have 1000+ cables, should we:
-   - Show progress bar?
-   - Process in batches?
-   - Background processing?
+5. **Large Datasets**: Show progress bar
+   - User sees import/export progress
+   - Prevents "frozen" appearance
+   - Can estimate time remaining
+   - Use Excel's built-in progress bar or custom form
 
-Let me know your preferences and I'll start implementing!
+Ready for implementation!
